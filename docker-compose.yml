@@ -1,4 +1,4 @@
-# docker compose up --build            -> API on :8000, dashboard on :8501
+# docker compose up --build            -> website + analyzer + API on :8000, Streamlit dashboard on :8501
 # docker compose run --rm pipeline train                     -> retrain from data/processed
 # docker compose run --rm pipeline ingest --download         -> rebuild the dataset from openAFRICA
 # docker compose run --rm pipeline ingest --raw-dir data/sample_raw --no-network --no-xlsx

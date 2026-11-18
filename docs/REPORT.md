@@ -210,8 +210,10 @@ The neighbour-free cause model reaches macro-F1 0.52 ± 0.16 in sensor-grouped C
 |---|---|
 | Reproducible pipeline | `python -m airq.pipeline ingest \| train \| predict`. Training takes about 2 minutes on one CPU core and writes `models/` (meta-model, preprocessing tables, cause model, `model_config.json` with data SHA-256 and package versions) and `reports/metrics.json`. |
 | API | FastAPI (`api/main.py`): `/health`, `/model-info`, `/predict` (JSON), `/predict/file` (CSV/XLSX, JSON or CSV out); per-request threshold and severity overrides; optional SHAP explanations. |
-| Containers | `Dockerfile` (API, health check, non-root user), `Dockerfile.pipeline` (retraining with bind mounts), `docker-compose.yml` (API :8000, Streamlit dashboard :8501, pipeline service). |
-| Quality | 13 pytest tests (pipeline round trip, leakage guards, API, Streamlit app); GitHub Actions runs them, a quick retrain and a Docker build on every push. The notebook asserts feature/probability/threshold parity with the deployed package. |
+| Website | Landing page (`/`) and interactive analyzer (`/app`) served by the same FastAPI container; live threshold and severity controls, SHAP explanations, neighbour evidence, sensor health. |
+| Hosting | Render (Docker web service, `render.yaml` Blueprint, health check `/health`); Streamlit Community Cloud as an alternative demo. |
+| Containers | `Dockerfile` (API + website, health check, non-root user), `Dockerfile.pipeline` (retraining with bind mounts), `docker-compose.yml` (API :8000, Streamlit dashboard :8501, pipeline service). |
+| Quality | 15 pytest tests (pipeline round trip, leakage guards, API, website, Streamlit app); GitHub Actions runs them, a quick retrain and a Docker build on every push. The notebook asserts feature/probability/threshold parity with the deployed package. |
 
 ## 7. Limitations
 

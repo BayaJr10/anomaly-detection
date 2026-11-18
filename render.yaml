@@ -1,0 +1,16 @@
+# Render Blueprint: Render reads this file and creates the service for you.
+# Dashboard > New > Blueprint > pick this repository > Apply.
+services:
+  - type: web
+    name: hewa-airq
+    runtime: docker
+    plan: free
+    region: frankfurt          # closest Render region to Nairobi
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true           # redeploys on every push to main
+    envVars:
+      - key: AIRQ_MAX_UPLOAD_ROWS
+        value: "20000"

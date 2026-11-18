@@ -16,6 +16,7 @@ from typing import Literal, Optional
 import pandas as pd
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from airq import __version__
@@ -153,7 +154,7 @@ def _score(df: pd.DataFrame, threshold=None, explain=False, only_flagged=False, 
 
 
 # ----------------------------------------------------------------- routes
-@app.get("/")
+@app.get("/api", tags=["service"])
 def root():
     return {"service": "nairobi-airq-anomaly", "version": __version__, "docs": "/docs"}
 
@@ -208,3 +209,10 @@ async def predict_file(file: UploadFile = File(..., description="CSV or XLSX in 
         return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=anomaly_scores.csv"})
     return {"info": info, "predictions": _records(out)}
+
+
+# ----------------------------------------------------------------- web front end
+from api import web  # noqa: E402
+
+web.mount(app, lambda: STATE["scorer"])
+app.mount("/static", StaticFiles(directory=web.WEB_DIR / "static"), name="static")

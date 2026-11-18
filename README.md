@@ -14,7 +14,7 @@ Nairobi relies on low-cost optical sensors (sensors.AFRICA) for long-term air-qu
 2. **Learns what is normal** for each neighbourhood, local hour and weekday, and scores how far each reading departs from it.
 3. **Detects anomalies** with five unsupervised detectors (statistical MAD, LOF, One-Class SVM, DBSCAN, STL). Their consensus trains one fast SMOTE-balanced XGBoost scorer.
 4. **Explains and triages every flag.** Each flag gets SHAP top-3 drivers in plain language, a severity tier (Watch / Alert / Critical), and a likely cause from neighbour evidence (genuine / likely sensor fault / unverifiable). It also gets a humidity-artefact warning and the stakeholder it should be routed to.
-5. **Serves it** as a FastAPI service in Docker, a standalone Streamlit app (deployable free on Streamlit Community Cloud), and a batch CLI.
+5. **Serves it** from one Docker container: a landing page, an interactive analyzer and the REST API, deployable free on Render. There is also a batch CLI and a standalone Streamlit app.
 
 ## Architecture
 
@@ -62,7 +62,9 @@ The same `AnomalyScorer` code path serves the batch CLI, the API and the noteboo
 │   ├── scoring.py               AnomalyScorer used by CLI, API and notebook
 │   ├── train.py                 end-to-end training script
 │   └── pipeline.py              CLI: ingest | validate-data | train | predict | all
-├── api/main.py                  FastAPI service
+├── api/main.py, api/web.py      FastAPI service, website routes
+├── web/                         landing page and analyzer (HTML/CSS/JS, bundled GSAP + Plotly)
+├── render.yaml                  Render Blueprint (one Docker web service)
 ├── streamlit_app/               standalone Streamlit app (Streamlit Community Cloud)
 ├── dashboard/                   Streamlit client of the API (+ Dockerfile)
 ├── Dockerfile · Dockerfile.pipeline · docker-compose.yml
@@ -89,8 +91,8 @@ The same `AnomalyScorer` code path serves the batch CLI, the API and the noteboo
 
 ```bash
 docker compose up --build
-# API docs:   http://localhost:8000/docs
-# Dashboard:  http://localhost:8501
+# Website:    http://localhost:8000      (analyzer at /app, API docs at /docs)
+# Streamlit:  http://localhost:8501
 ```
 
 Send readings to the API:
@@ -141,7 +143,34 @@ Everything learned from data (imputation medians, baseline, detector parameters,
 
 > **Note on step 1.** The download URL comes from the openAFRICA CKAN API (`configs/config.yaml → ingest`). If the dataset id changes, the code falls back to a CKAN search; you can also drop monthly CSVs into `data/raw/` manually. Neighbourhood names come from a frozen cache, so a rebuild reproduces the published names even though OpenStreetMap changes. The round trip on the sample months matches the published file exactly (`tests/test_ingest.py`).
 
-## Streamlit app (live demo)
+## Website and interactive analyzer (Hewa)
+
+The API container also serves the public website, so one Docker service on Render is the whole product:
+
+| Path | What it is |
+|---|---|
+| `/` | Landing page: Nairobi skyline under a particle haze driven by a replay of real readings from sensor 3576 (12–17 May 2024), the five-step pipeline as a pinned scroll sequence (GSAP ScrollTrigger), and honest validation/test results |
+| `/app` | Interactive analyzer: pick a bundled sample or upload a CSV/XLSX; move the alert threshold and severity rules and every view updates instantly; timeline with flags, flags table (filter, sort, CSV download), "why it was flagged" with SHAP reasons and neighbouring sensors, per-sensor health and distributions, model card |
+| `/docs` | Interactive API documentation (FastAPI) |
+| `/predict`, `/predict/file` | REST endpoints |
+
+The server scores data once (probability floor 0.5, with SHAP explanations for every reading above it). The browser then re-applies the threshold, severity and cause rules, which mirror `src/airq/triage.py`. `tests/test_api.py::test_browser_rules_match_server` checks that they agree with the server's labels.
+
+Front-end files live in `web/` (plain HTML, CSS and JavaScript, no build step). GSAP 3.13 (standard no-charge licence), Plotly.js 2.35 (MIT) and the Big Shoulders Display and Public Sans fonts (SIL OFL) are bundled in `web/static`, so the site does not depend on outside CDNs. Photos are hotlinked from Unsplash under the Unsplash License and credited in the page footer.
+
+## Deploying on Render (Docker)
+
+`render.yaml` is a Render Blueprint, so Render builds the `Dockerfile` and configures the service itself.
+
+1. Sign in at https://render.com with GitHub.
+2. Choose **New → Blueprint**, pick `BayaJr10/anomaly-detection`, and click **Apply**.
+3. Wait for the first build (about 8–12 minutes: it installs the Python packages). The site is then live at `https://hewa-airq.onrender.com` or the URL Render shows.
+
+Without the Blueprint: **New → Web Service → Docker**, instance type **Free**, health check path `/health`. The container listens on `$PORT`, which Render sets automatically.
+
+The free instance has 512 MB of memory; the service peaks at about 360 MB, and uploads are capped at 20,000 rows (`AIRQ_MAX_UPLOAD_ROWS`). Free services sleep after 15 minutes without traffic, so the first visit afterwards takes about a minute. Open the site shortly before presenting. Every push to `main` redeploys automatically.
+
+## Streamlit app (alternative demo)
 
 `streamlit_app/app.py` loads the trained models directly, so it needs no API. It uses the same `AnomalyScorer` as the API and the batch CLI, so it gives identical results.
 

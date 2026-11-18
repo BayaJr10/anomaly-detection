@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hewa: Nairobi air-quality anomalies</title>
+<meta name="description" content="Hewa checks hourly PM2.5 readings from Nairobi's low-cost sensors, flags the unusual ones and says whether they look like real pollution or a faulty sensor.">
+<link rel="icon" href="/static/img/hewa-mark.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1693902997450-7e912c0d3554?fm=jpg&q=80&w=2400&auto=format&fit=crop">
+<link rel="stylesheet" href="/static/css/site.css">
+</head>
+<body>
+<a class="visually-hidden" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Hewa home">
+      <img class="brand-mark" src="/static/img/hewa-mark.svg" alt="">
+      <span class="brand-name">Hewa</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav-text" href="#how">How it works</a>
+      <a class="nav-text" href="#results">Results</a>
+      <a class="nav-text" href="/docs">API</a>
+      <a class="btn btn-primary" href="/app">Open the analyzer</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <canvas id="haze" aria-hidden="true"></canvas>
+    <div class="wrap hero-inner">
+      <div>
+        <h1 id="hero-title">Is that spike in Nairobi’s air real, or is the sensor broken?</h1>
+        <p class="hero-lede">Hewa checks every hourly PM2.5 reading from the city’s low-cost sensors, flags the ones that are unusual for that place and time, and tells you whether neighbouring sensors saw the same thing.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/app">Open the analyzer</a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
+        </div>
+      </div>
+
+      <aside class="telemetry" aria-label="Replay of real sensor readings">
+        <div class="telemetry-head">
+          <span class="telemetry-site" id="t-site">Sensor 3576, Nairobi City</span>
+          <span class="telemetry-time" id="t-time">–</span>
+        </div>
+        <div class="telemetry-reading">
+          <span class="telemetry-value" id="t-value">–</span>
+          <span class="telemetry-unit">µg/m³ PM2.5</span>
+        </div>
+        <p class="telemetry-usual" id="t-usual">Usual for this hour: –</p>
+        <svg id="t-spark" viewBox="0 0 300 86" preserveAspectRatio="none" role="img" aria-label="PM2.5 over the replay window"></svg>
+        <div class="telemetry-foot">
+          <span class="status" id="t-status" data-level="Normal" aria-live="polite">Normal</span>
+          <button class="replay-btn" id="t-toggle" type="button" aria-pressed="false">Pause</button>
+        </div>
+        <p class="telemetry-note">Replay of real hourly readings, 12–17 May 2024. Flags are the model’s own output.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="answers-title">
+    <div class="wrap answers-grid">
+      <div>
+        <h2 id="answers-title">Every flag comes with a likely cause</h2>
+        <p class="section-lede">Low-cost sensors drift, over-read in humid air and sometimes fail outright. A spike only means pollution if it also shows up nearby, so Hewa checks the other sensors in the same neighbourhood during the same hour.</p>
+        <div class="answer genuine">
+          <h3>Genuine pollution event</h3>
+          <p>Neighbouring sensors rose too. Something real is in the air, such as burning, traffic or dust.</p>
+          <span class="route">Goes to environment and public-health officers</span>
+        </div>
+        <div class="answer fault">
+          <h3>Likely sensor fault</h3>
+          <p>Neighbours reported a normal hour, or the reading is beyond what the sensor can physically measure.</p>
+          <span class="route">Goes to the sensor maintenance team</span>
+        </div>
+        <div class="answer unverifiable">
+          <h3>Can’t be checked yet</h3>
+          <p>No other sensor nearby was reporting. Hewa shows the model’s best guess and the reasons behind the flag.</p>
+          <span class="route">Goes to an analyst for review</span>
+        </div>
+      </div>
+      <figure class="answers-photo" style="margin:0">
+        <figcaption>Smog over a city. Low-cost sensors are how most African cities see this at street level.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="pipeline" id="how" aria-labelledby="how-title">
+    <div class="pipeline-stage">
+      <div class="wrap pipeline-grid">
+        <div>
+          <h2 id="how-title">How a reading is judged</h2>
+          <p class="section-lede">From the raw sensor archive to a flag someone can act on, in five steps.</p>
+          <div class="meter" aria-hidden="true"><div class="meter-fill" id="meter-fill"></div></div>
+        </div>
+        <ol class="steps">
+          <li class="step">
+            <h3>Collect hourly readings</h3>
+            <p>About 292,000 hourly readings from 53 sensor sites in Nairobi, 2019 to 2026, rebuilt from the sensors.AFRICA archive.</p>
+          </li>
+          <li class="step">
+            <h3>Compare with the usual level</h3>
+            <p>Each reading is set against the typical PM2.5 for that neighbourhood, local hour and weekday, so a normal rush hour is not an alarm.</p>
+          </li>
+          <li class="step">
+            <h3>Let five detectors vote</h3>
+            <p>Statistical, density, boundary, clustering and time-series methods each look for something different. A reading is anomalous when at least three agree.</p>
+          </li>
+          <li class="step">
+            <h3>Score and explain it</h3>
+            <p>A fast model learns that vote and scores new readings in milliseconds, with the top reasons behind every flag in plain language.</p>
+          </li>
+          <li class="step">
+            <h3>Grade and route it</h3>
+            <p>Severity comes from how unusual and how unhealthy the reading is. Cause comes from neighbouring sensors, and that decides who gets the flag.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="results" aria-labelledby="results-title">
+    <div class="wrap results-grid">
+      <div>
+        <h2 id="results-title">How well it does</h2>
+        <p class="section-lede">The model was trained on 2019–2023, tuned on 2024 and tested once on 2025–2026. There are no confirmed labels for Nairobi’s air, so scores measure agreement with the five-detector vote.</p>
+        <div class="table-scroll">
+          <table class="score-table" aria-describedby="results-note">
+            <thead><tr><th scope="col"></th><th scope="col">Validation, 2024</th><th scope="col">Test, 2025–26</th></tr></thead>
+            <tbody id="score-body">
+              <tr><th scope="row">Precision-recall area</th><td><strong>0.85</strong></td><td><strong>0.45</strong></td></tr>
+              <tr><th scope="row">F1 on anomalies</th><td>0.81</td><td>0.46</td></tr>
+              <tr><th scope="row">Readings scored</th><td>21,128</td><td>14,824</td></tr>
+              <tr><th scope="row">Active sensors</th><td>12</td><td>7</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="results-note" id="results-note">The drop on the test years is real: fewer sensors were reporting, and most flags came from one or two devices. Chance level for the precision-recall area is about 0.01.</p>
+      </div>
+      <figure class="monitor-photo" style="margin:0">
+        <figcaption>PM2.5 readings on an air-quality monitor.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="cta" aria-labelledby="cta-title">
+    <div class="wrap">
+      <h2 id="cta-title">Try it on a month of Nairobi readings</h2>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/app">Open the analyzer</a>
+        <a class="btn btn-ghost" href="/docs">Use the API</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <h3>Hewa</h3>
+      <p>Explainable anomaly detection for Nairobi’s low-cost air-quality sensors.</p>
+      <p>Baya Isaac, DSA 8401 capstone, Strathmore University.</p>
+    </div>
+    <div>
+      <h3>Data</h3>
+      <p>Readings from the <a href="https://sensors.africa" rel="noopener">sensors.AFRICA</a> archive, published on <a href="https://open.africa" rel="noopener">openAFRICA</a>.</p>
+      <p><a href="https://github.com/BayaJr10/anomaly-detection" rel="noopener">Source code on GitHub</a></p>
+    </div>
+    <div>
+      <h3>Photos</h3>
+      <p>All from Unsplash, under the Unsplash License:
+        Nairobi skyline by <a href="https://unsplash.com/@kennymurgor" rel="noopener">Kenny Murgor</a>,
+        city smog by <a href="https://unsplash.com/@jerry_318" rel="noopener">Jerry Wang</a>,
+        night traffic in Kraków by <a href="https://unsplash.com/@dylu" rel="noopener">Jacek Dylag</a>,
+        air-quality monitor by <a href="https://unsplash.com/@timwitzdam" rel="noopener">Tim Witzdam</a>.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/vendor/gsap.min.js"></script>
+<script src="/static/vendor/ScrollTrigger.min.js"></script>
+<script src="/static/js/landing.js"></script>
+</body>
+</html>

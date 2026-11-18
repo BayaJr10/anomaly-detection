@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hewa analyzer</title>
+<meta name="description" content="Score hourly Nairobi PM2.5 readings, adjust the alert rules and see why each reading was flagged.">
+<link rel="icon" href="/static/img/hewa-mark.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/site.css">
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="app-body">
+<header class="app-header">
+  <a class="brand" href="/" aria-label="Hewa home">
+    <img class="brand-mark" src="/static/img/hewa-mark.svg" alt="">
+    <span class="brand-name">Hewa</span>
+  </a>
+  <span class="app-title">Analyzer</span>
+  <nav class="app-nav" aria-label="App">
+    <a href="/">Home</a>
+    <a href="/docs">API docs</a>
+    <button class="btn btn-outline-light controls-toggle" id="controls-toggle" type="button" aria-expanded="false" aria-controls="controls">Data and rules</button>
+  </nav>
+</header>
+
+<div class="app-layout">
+  <aside class="controls" id="controls" aria-label="Data and rules">
+    <section class="panel-block">
+      <h2>Data</h2>
+      <div class="samples" id="samples" role="radiogroup" aria-label="Bundled samples"></div>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".csv,.gz,.xlsx" class="visually-hidden">
+        <span class="dropzone-title">Upload your own readings</span>
+        <span class="dropzone-hint">CSV, CSV.GZ or XLSX in the hourly dataset format. Times in UTC.</span>
+      </label>
+      <details class="format-help">
+        <summary>Which columns are needed?</summary>
+        <p>Required: <code>LOCATION</code>, <code>NEIGHBORHOOD</code>, <code>PM25</code>, <code>PM10</code>, and <code>DATETIME</code> or <code>DATE</code> + <code>TIME</code> (UTC). Optional: <code>PM1</code>, <code>HUMIDITY</code>, <code>TEMPERATURE</code>, <code>NEIGHBORHOOD_LAT</code>, <code>NEIGHBORHOOD_LON</code>.</p>
+        <p>Include the 72 hours before the period you care about, and all sensors for the same hours, so the history and neighbour checks are complete.</p>
+      </details>
+    </section>
+
+    <section class="panel-block">
+      <h2>Alert threshold</h2>
+      <div class="slider-row">
+        <input type="range" id="thr" min="0.5" max="0.999" step="0.001" aria-describedby="thr-help">
+        <output id="thr-out" for="thr">–</output>
+      </div>
+      <p class="help" id="thr-help">A reading is flagged when the model’s anomaly probability reaches this value. Lower it to catch more, raise it to see only the clearest cases.</p>
+      <button class="link-btn" id="thr-reset" type="button">Reset to the tuned value</button>
+    </section>
+
+    <section class="panel-block">
+      <h2>Severity rules</h2>
+      <p class="help">A flag is Critical or Alert if either test passes, otherwise Watch. PM2.5 bands follow the US EPA 2024 breakpoints.</p>
+      <div class="rule-grid">
+        <label for="crit-z">Critical when unusualness ≥</label><input type="number" id="crit-z" min="1" max="50" step="0.5">
+        <label for="crit-pm">or PM2.5 ≥ (µg/m³)</label><input type="number" id="crit-pm" min="0" max="1000" step="5">
+        <label for="alert-z">Alert when unusualness ≥</label><input type="number" id="alert-z" min="1" max="50" step="0.5">
+        <label for="alert-pm">or PM2.5 ≥ (µg/m³)</label><input type="number" id="alert-pm" min="0" max="1000" step="5">
+      </div>
+      <p class="help">Unusualness is the robust z-score of the excess over the usual level.</p>
+    </section>
+  </aside>
+
+  <main class="workspace" id="main">
+    <div class="status-bar" id="status" role="status" aria-live="polite"></div>
+
+    <section class="kpis" aria-label="Summary">
+      <div class="kpi"><span class="kpi-value" data-kpi="rows">–</span><span class="kpi-label">readings scored</span></div>
+      <div class="kpi"><span class="kpi-value" data-kpi="flags">–</span><span class="kpi-label">flagged</span></div>
+      <div class="kpi kpi-critical"><span class="kpi-value" data-kpi="critical">–</span><span class="kpi-label">critical</span></div>
+      <div class="kpi kpi-fault"><span class="kpi-value" data-kpi="faults">–</span><span class="kpi-label">sensor faults</span></div>
+      <div class="kpi kpi-genuine"><span class="kpi-value" data-kpi="genuine">–</span><span class="kpi-label">genuine events</span></div>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-timeline" aria-controls="view-timeline" aria-selected="true">Timeline</button>
+      <button role="tab" id="tab-flags" aria-controls="view-flags" aria-selected="false" tabindex="-1">Flags</button>
+      <button role="tab" id="tab-explain" aria-controls="view-explain" aria-selected="false" tabindex="-1">Why it was flagged</button>
+      <button role="tab" id="tab-sensors" aria-controls="view-sensors" aria-selected="false" tabindex="-1">Sensors</button>
+      <button role="tab" id="tab-model" aria-controls="view-model" aria-selected="false" tabindex="-1">About the model</button>
+    </div>
+
+    <section class="view" role="tabpanel" id="view-timeline" aria-labelledby="tab-timeline">
+      <div class="view-toolbar">
+        <label class="field">Sensor <select id="sensor-select"></select></label>
+        <label class="switch"><input type="checkbox" id="log-toggle"> Log scale</label>
+        <span class="legend-note">Grey dashes show the usual level for that neighbourhood, hour and weekday.</span>
+      </div>
+      <div class="chart chart-tall" id="chart-timeline"></div>
+      <div class="two-col">
+        <div class="card"><h3>Flags by severity and likely cause</h3><div class="chart" id="chart-sevcause"></div></div>
+        <div class="card"><h3>When flags happen</h3><div class="chart" id="chart-heat"></div></div>
+      </div>
+    </section>
+
+    <section class="view" role="tabpanel" id="view-flags" aria-labelledby="tab-flags" hidden>
+      <div class="view-toolbar wrap-row">
+        <div class="chip-group" id="sev-filter" aria-label="Filter by severity"></div>
+        <div class="chip-group" id="cause-filter" aria-label="Filter by likely cause"></div>
+        <label class="field grow">Neighbourhood <input type="search" id="hood-search" placeholder="Type to filter"></label>
+        <button class="btn btn-outline small" id="download" type="button">Download CSV</button>
+      </div>
+      <p class="help" id="flag-count"></p>
+      <div class="table-wrap">
+        <table class="data-table" id="flag-table">
+          <thead><tr>
+            <th scope="col" data-sort="DATETIME" aria-sort="descending"><button type="button">Local time</button></th>
+            <th scope="col" data-sort="LOCATION"><button type="button">Sensor</button></th>
+            <th scope="col" data-sort="NEIGHBORHOOD"><button type="button">Neighbourhood</button></th>
+            <th scope="col" data-sort="PM25" class="num"><button type="button">PM2.5</button></th>
+            <th scope="col" data-sort="baseline" class="num"><button type="button">Usual</button></th>
+            <th scope="col" data-sort="anomaly_probability" class="num"><button type="button">Probability</button></th>
+            <th scope="col" data-sort="sevRank"><button type="button">Severity</button></th>
+            <th scope="col" data-sort="cause"><button type="button">Likely cause</button></th>
+            <th scope="col">Goes to</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" role="tabpanel" id="view-explain" aria-labelledby="tab-explain" hidden>
+      <div class="view-toolbar">
+        <label class="field grow">Flagged reading <select id="explain-select"></select></label>
+        <button class="btn btn-outline small" id="explain-prev" type="button" aria-label="Previous flag">Previous</button>
+        <button class="btn btn-outline small" id="explain-next" type="button" aria-label="Next flag">Next</button>
+      </div>
+      <div class="explain-grid">
+        <div class="card explain-card" id="explain-card"></div>
+        <div class="card"><h3>What pushed the score up or down</h3><p class="help">Red bars raised the anomaly score, blue bars lowered it. Longer bars mattered more.</p><div class="chart" id="chart-shap"></div></div>
+      </div>
+      <div class="card"><h3 id="nbr-title">Did neighbouring sensors see it?</h3><div class="chart" id="chart-nbr"></div></div>
+    </section>
+
+    <section class="view" role="tabpanel" id="view-sensors" aria-labelledby="tab-sensors" hidden>
+      <div class="table-wrap">
+        <table class="data-table" id="sensor-table">
+          <thead><tr><th scope="col">Sensor</th><th scope="col">Neighbourhood</th><th scope="col" class="num">Readings</th>
+            <th scope="col" class="num">Flags</th><th scope="col">Flag rate</th><th scope="col" class="num">Faults</th>
+            <th scope="col" class="num">Median PM2.5</th><th scope="col">Last reading</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card"><h3>PM2.5 distribution per sensor, normal and flagged readings</h3><div class="chart" id="chart-dist"></div></div>
+      <div class="card"><h3>Where the sensors are</h3><div class="chart chart-tall" id="chart-map"></div></div>
+    </section>
+
+    <section class="view" role="tabpanel" id="view-model" aria-labelledby="tab-model" hidden>
+      <div class="card prose" id="model-card"></div>
+    </section>
+  </main>
+</div>
+
+<div class="loading" id="loading" hidden><div class="loading-box"><span class="spinner" aria-hidden="true"></span><span id="loading-text">Scoring readings…</span></div></div>
+
+<script src="/static/vendor/gsap.min.js"></script>
+<script src="/static/vendor/plotly.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+.git
+**/__pycache__
+**/.ipynb_checkpoints
+.pytest_cache
+mlruns
+notebooks
+tests
+docs
+data/raw
+data/processed
+data/sample_raw
+reports/figures
+reports/scored_val_test.csv.gz

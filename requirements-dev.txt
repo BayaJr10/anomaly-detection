@@ -1,0 +1,14 @@
+# Notebooks, dashboard and tests (on top of requirements.txt)
+-r requirements.txt
+matplotlib==3.11.2
+seaborn==0.13.2
+pytest==9.2.0
+httpx==0.28.1
+nbformat==5.11.1
+nbclient==0.11.0
+ipykernel==7.4.0
+streamlit==1.67.0
+plotly
+folium
+mlflow
+evidently

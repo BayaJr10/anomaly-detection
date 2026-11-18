@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          pip install -r requirements.txt pytest httpx
+          pip install -e .
+      - name: Data-pipeline round trip on the bundled sample
+        run: python -m airq.pipeline ingest --raw-dir data/sample_raw --no-network --no-xlsx
+      - name: Quick retrain (smoke test, writes to a temp copy)
+        run: |
+          cp -r models /tmp/models_backup
+          python -m airq.pipeline train --quick
+          rm -rf models && mv /tmp/models_backup models
+      - name: Unit and API tests
+        run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -t nairobi-airq-api:ci .
+      - name: Run container and hit /health
+        run: |
+          docker run -d --name api -p 8000:8000 nairobi-airq-api:ci
+          for i in $(seq 1 30); do curl -fs localhost:8000/health && break; sleep 2; done
+          curl -fs -X POST localhost:8000/predict -H 'Content-Type: application/json' -d @data/sample/sample_request.json | head -c 400

@@ -1,0 +1,41 @@
+# docker compose up --build            -> API on :8000, dashboard on :8501
+# docker compose run --rm pipeline train                     -> retrain from data/processed
+# docker compose run --rm pipeline ingest --download         -> rebuild the dataset from openAFRICA
+# docker compose run --rm pipeline ingest --raw-dir data/sample_raw --no-network --no-xlsx
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nairobi-airq-api:1.0.0
+    ports:
+      - "8000:8000"
+    environment:
+      - AIRQ_MODELS_DIR=/app/models
+    volumes:
+      - ./models:/app/models:ro          # pick up retrained artifacts without rebuilding
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    image: nairobi-airq-dashboard:1.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - AIRQ_API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline
+    image: nairobi-airq-pipeline:1.0.0
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./reports:/app/reports
+    profiles: ["pipeline"]

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "airq"
+version = "1.0.0"
+description = "Explainable ensemble anomaly detection for Nairobi's low-cost air-quality sensor network"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Baya Isaac" }]
+
+[project.scripts]
+airq = "airq.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]

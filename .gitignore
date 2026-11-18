@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.venv/
+mlruns/
+# raw archive is several GB: re-download with `python -m airq.pipeline ingest --download`
+data/raw/*
+!data/raw/.gitkeep
+# the .xlsx export is 29 MB; the identical .csv.gz is committed and is what training reads
+data/processed/*.xlsx
+data/processed/sample_rebuild.csv.gz

@@ -1,0 +1,430 @@
+{
+  "cleaning": {
+    "rows_in": 292059,
+    "invalid_temperature": 617,
+    "invalid_humidity": 336,
+    "pm_above_sensor_range": 439,
+    "pm_ordering_violations": 444,
+    "dropped_missing_pm": 9901,
+    "dropped_no_coordinates": 26,
+    "rows_out": 281693
+  },
+  "splits": {
+    "train": {
+      "rows": 245741,
+      "sensors": 47,
+      "start": "2019-01-01 03:00:00",
+      "end": "2023-12-31 23:00:00",
+      "pseudo_positive_rate": 0.006795772785168124
+    },
+    "val": {
+      "rows": 21128,
+      "sensors": 12,
+      "start": "2024-01-01 00:00:00",
+      "end": "2024-12-31 23:00:00",
+      "pseudo_positive_rate": 0.010886028019689511
+    },
+    "test": {
+      "rows": 14824,
+      "sensors": 7,
+      "start": "2025-01-01 00:00:00",
+      "end": "2026-07-01 02:00:00",
+      "pseudo_positive_rate": 0.005531570426335672
+    }
+  },
+  "detector_flag_rates": {
+    "train": {
+      "stat_flag": 0.07205553814788741,
+      "lof_flag": 0.008386878868402099,
+      "svm_flag": 0.01011634200235207,
+      "dbscan_flag": 0.004146642196458873,
+      "stl_flag": 0.12980332952173224
+    },
+    "val": {
+      "stat_flag": 0.13574403634986748,
+      "lof_flag": 0.02068345323741007,
+      "svm_flag": 0.010649375236652783,
+      "dbscan_flag": 0.008188186293070807,
+      "stl_flag": 0.14350624763347217
+    },
+    "test": {
+      "stat_flag": 0.19171613599568268,
+      "lof_flag": 0.0641527253103076,
+      "svm_flag": 0.02172153264975715,
+      "dbscan_flag": 0.004452239611440907,
+      "stl_flag": 0.027590393955747437
+    }
+  },
+  "base_votes_train": {
+    "0": 200249,
+    "1": 38109,
+    "2": 5713,
+    "3": 1085,
+    "4": 544,
+    "5": 41
+  },
+  "feature_pruning": {
+    "kept": [
+      "residual",
+      "PM25",
+      "PM10",
+      "HUMIDITY",
+      "TEMPERATURE",
+      "pm25_pm10_ratio",
+      "hood_deviation",
+      "pm25_roll_mean_72",
+      "PM1_missing"
+    ],
+    "dropped": {
+      "hood_hour_mean": "exactly PM25 - hood_deviation",
+      "pm25_roll_mean_24": "|r| = 0.96 with pm25_roll_mean_6",
+      "TEMPERATURE_missing": "|r| = 1.00 with HUMIDITY_missing",
+      "pm25_roll_mean_6": "gain share 0.847% (< 1%)",
+      "pm25_roll_std_72": "gain share 0.692% (< 1%)",
+      "pm25_roll_std_24": "gain share 0.676% (< 1%)",
+      "hood_hour_std": "gain share 0.643% (< 1%)",
+      "HUMIDITY_missing": "gain share 0.531% (< 1%)",
+      "pm25_roll_std_6": "gain share 0.521% (< 1%)"
+    },
+    "probe_gain": {
+      "PM10": 0.43860000371932983,
+      "residual": 0.249099999666214,
+      "PM1_missing": 0.09489999711513519,
+      "PM25": 0.07800000160932541,
+      "TEMPERATURE": 0.030799999833106995,
+      "pm25_pm10_ratio": 0.020600000396370888,
+      "pm25_roll_mean_72": 0.019500000402331352,
+      "hood_deviation": 0.018200000748038292,
+      "HUMIDITY": 0.01119999960064888,
+      "pm25_roll_mean_6": 0.008500000461935997,
+      "pm25_roll_std_72": 0.006899999920278788,
+      "pm25_roll_std_24": 0.006800000090152025,
+      "hood_hour_std": 0.006399999838322401,
+      "HUMIDITY_missing": 0.0052999998442828655,
+      "pm25_roll_std_6": 0.005200000014156103
+    }
+  },
+  "cv": {
+    "roc_auc": [
+      0.9908932977024918,
+      0.00828458140411761
+    ],
+    "average_precision": [
+      0.82111657849822,
+      0.09787726746763889
+    ],
+    "f1": [
+      0.6681204675577159,
+      0.1524909316110889
+    ]
+  },
+  "threshold": 0.9703824520111084,
+  "metrics": {
+    "val": {
+      "n": 21128,
+      "positives": 230,
+      "positive_rate": 0.010886028019689511,
+      "precision": 0.8411214953271028,
+      "recall": 0.782608695652174,
+      "f1": 0.8108108108108109,
+      "flag_rate": 0.01012873911397198,
+      "roc_auc": 0.9935410919289135,
+      "pr_auc": 0.8521210048179688,
+      "corroboration": 0.08333333333333333,
+      "corroboration_n": 24,
+      "confusion_matrix": [
+        [
+          20864,
+          34
+        ],
+        [
+          50,
+          180
+        ]
+      ],
+      "flag_concentration": {
+        "total_flags": 214,
+        "top_sensor": 3576,
+        "top_sensor_share": 0.677570093457944,
+        "top3": {
+          "3576": 145,
+          "3596": 21,
+          "3966": 14
+        }
+      }
+    },
+    "val_at_0.5": {
+      "n": 21128,
+      "positives": 230,
+      "positive_rate": 0.010886028019689511,
+      "precision": 0.5804597701149425,
+      "recall": 0.8782608695652174,
+      "f1": 0.698961937716263,
+      "flag_rate": 0.016471033699356305,
+      "roc_auc": 0.9935410919289135,
+      "pr_auc": 0.8521210048179688
+    },
+    "test": {
+      "n": 14824,
+      "positives": 82,
+      "positive_rate": 0.005531570426335672,
+      "precision": 0.6,
+      "recall": 0.36585365853658536,
+      "f1": 0.45454545454545453,
+      "flag_rate": 0.0033729087965461415,
+      "roc_auc": 0.9592925141705628,
+      "pr_auc": 0.4476276331099143,
+      "corroboration": 0.0,
+      "corroboration_n": 13,
+      "confusion_matrix": [
+        [
+          14722,
+          20
+        ],
+        [
+          52,
+          30
+        ]
+      ],
+      "flag_concentration": {
+        "total_flags": 50,
+        "top_sensor": 3966,
+        "top_sensor_share": 0.56,
+        "top3": {
+          "3966": 28,
+          "3981": 17,
+          "76": 3
+        }
+      }
+    }
+  },
+  "detector_comparison": {
+    "stat": {
+      "flag_rate": 0.1357,
+      "PR-AUC vs label": 0.0802,
+      "F1 vs label": 0.1485,
+      "corroboration": 0.404,
+      "n_eligible": 1089.0
+    },
+    "lof": {
+      "flag_rate": 0.0207,
+      "PR-AUC vs label": 0.0344,
+      "F1 vs label": 0.1529,
+      "corroboration": 0.0,
+      "n_eligible": 128.0
+    },
+    "svm": {
+      "flag_rate": 0.0106,
+      "PR-AUC vs label": 0.6285,
+      "F1 vs label": 0.7912,
+      "corroboration": 0.0667,
+      "n_eligible": 60.0
+    },
+    "dbscan": {
+      "flag_rate": 0.0082,
+      "PR-AUC vs label": 0.6229,
+      "F1 vs label": 0.7792,
+      "corroboration": 0.0833,
+      "n_eligible": 24.0
+    },
+    "stl": {
+      "flag_rate": 0.1435,
+      "PR-AUC vs label": 0.0502,
+      "F1 vs label": 0.1122,
+      "corroboration": 0.1487,
+      "n_eligible": 1022.0
+    },
+    "consensus (label)": {
+      "flag_rate": 0.0109,
+      "PR-AUC vs label": null,
+      "F1 vs label": null,
+      "corroboration": 0.0645,
+      "n_eligible": 31.0
+    },
+    "stacked": {
+      "flag_rate": 0.0101,
+      "PR-AUC vs label": 0.8521,
+      "F1 vs label": 0.8108,
+      "corroboration": 0.0833,
+      "n_eligible": 24.0
+    }
+  },
+  "consensus_ablation": {
+    "stat_flag": {
+      "label_flip_rate": 0.0059,
+      "F1 vs full label": 0.631,
+      "PR-AUC vs full label": 0.9434
+    },
+    "lof_flag": {
+      "label_flip_rate": 0.0018,
+      "F1 vs full label": 0.9074,
+      "PR-AUC vs full label": 0.8631
+    },
+    "svm_flag": {
+      "label_flip_rate": 0.0036,
+      "F1 vs full label": 0.799,
+      "PR-AUC vs full label": 0.7277
+    },
+    "dbscan_flag": {
+      "label_flip_rate": 0.0024,
+      "F1 vs full label": 0.8753,
+      "PR-AUC vs full label": 0.8187
+    },
+    "stl_flag": {
+      "label_flip_rate": 0.0038,
+      "F1 vs full label": 0.7863,
+      "PR-AUC vs full label": 0.8799
+    }
+  },
+  "contribution": {
+    "chance (anomaly rate)": 0.010886028019689511,
+    "|residual| alone": 0.7854634809585762,
+    "full stacked model": 0.8521210048179688,
+    "without PM-level features": 0.04483049709378601,
+    "without PM-level + rolling means": 0.010481807338846634
+  },
+  "severity_counts": {
+    "val": {
+      "Normal": 20914,
+      "Critical": 143,
+      "Alert": 71
+    },
+    "test": {
+      "Normal": 14774,
+      "Critical": 29,
+      "Alert": 17,
+      "Watch": 4
+    }
+  },
+  "cause_counts": {
+    "val": {
+      "unverifiable": 190,
+      "likely_sensor_fault": 18,
+      "genuine": 6
+    },
+    "test": {
+      "unverifiable": 37,
+      "likely_sensor_fault": 12,
+      "genuine": 1
+    }
+  },
+  "cause_model": {
+    "label_counts": {
+      "likely_sensor_fault": 304,
+      "genuine": 35
+    },
+    "n_sensors": 19,
+    "cv": "GroupKFold by sensor (5 folds)",
+    "cv_f1_macro": [
+      0.5235156836994797,
+      0.155831467896769
+    ],
+    "cv_balanced_accuracy": 0.5550703750272715,
+    "feature_importance": {
+      "PM25": 0.0754,
+      "PM10": 0.1018,
+      "HUMIDITY": 0.1283,
+      "TEMPERATURE": 0.1582,
+      "pm25_roll_mean_24": 0.107,
+      "pm25_roll_std_24": 0.1404,
+      "pm25_pm10_ratio": 0.158,
+      "residual": 0.0942,
+      "PM1_missing": 0.0351,
+      "HUMIDITY_missing": 0.0007,
+      "TEMPERATURE_missing": 0.0009
+    },
+    "status": "trained",
+    "test_report": {
+      "genuine": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "likely_sensor_fault": {
+        "precision": 0.9230769230769231,
+        "recall": 1.0,
+        "f1-score": 0.96,
+        "support": 12.0
+      },
+      "accuracy": 0.9230769230769231,
+      "macro avg": {
+        "precision": 0.46153846153846156,
+        "recall": 0.5,
+        "f1-score": 0.48,
+        "support": 13.0
+      },
+      "weighted avg": {
+        "precision": 0.8520710059171598,
+        "recall": 0.9230769230769231,
+        "f1-score": 0.8861538461538461,
+        "support": 13.0
+      }
+    }
+  },
+  "documented_events": {
+    "0": {
+      "event": "New Year fireworks (recurring city-wide event)",
+      "start": "2023-12-31 23:00:00",
+      "end": "2024-01-01 03:00:00",
+      "scope": "ALL",
+      "readings_in_window": 15,
+      "sensors": 4,
+      "flag_rate_in": 0.0667,
+      "flag_rate_out": 0.001,
+      "lift": 65.4578,
+      "mean_residual_in": 23.1529,
+      "source": "add citation"
+    },
+    "1": {
+      "event": "New Year fireworks (recurring city-wide event)",
+      "start": "2024-12-31 23:00:00",
+      "end": "2025-01-01 03:00:00",
+      "scope": "ALL",
+      "readings_in_window": 5,
+      "sensors": 1,
+      "flag_rate_in": 0.0,
+      "flag_rate_out": 0.0063,
+      "lift": 0.0,
+      "mean_residual_in": 24.8465,
+      "source": "add citation"
+    },
+    "2": {
+      "event": "New Year fireworks (recurring city-wide event)",
+      "start": "2025-12-31 23:00:00",
+      "end": "2026-01-01 03:00:00",
+      "scope": "ALL",
+      "readings_in_window": 9,
+      "sensors": 3,
+      "flag_rate_in": 0.0,
+      "flag_rate_out": 0.0038,
+      "lift": 0.0,
+      "mean_residual_in": 30.5121,
+      "source": "add citation"
+    }
+  },
+  "morans_i": {
+    "status": "ok",
+    "n_sensors": 10,
+    "pm25": {
+      "I": 0.15610585779106853,
+      "p_sim": 0.017
+    },
+    "rate": {
+      "I": 0.00017045013567166856,
+      "p_sim": 0.042
+    }
+  },
+  "range_fault_readings": {
+    "n": 439,
+    "by_sensor": {
+      "3626": 410,
+      "3967": 18,
+      "68": 3,
+      "3966": 3,
+      "3981": 2,
+      "76": 2,
+      "70": 1
+    }
+  }
+}

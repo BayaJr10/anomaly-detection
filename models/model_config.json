@@ -1,0 +1,42 @@
+{
+  "airq_version": "1.0.0",
+  "trained_at": "2026-11-17T20:48:30.583084+00:00",
+  "meta_features": [
+    "residual",
+    "PM25",
+    "PM10",
+    "HUMIDITY",
+    "TEMPERATURE",
+    "pm25_pm10_ratio",
+    "hood_deviation",
+    "pm25_roll_mean_72",
+    "PM1_missing"
+  ],
+  "threshold": 0.9703824520111084,
+  "nbr_support": 0.5,
+  "severity": {
+    "critical_z": 10.0,
+    "alert_z": 6.0,
+    "critical_pm25": 125.5,
+    "alert_pm25": 55.5
+  },
+  "pm_sensor_max": 1000.0,
+  "local_utc_offset_hours": 3,
+  "split": {
+    "train_end": "2024-01-01",
+    "val_end": "2025-01-01"
+  },
+  "data_file": "nairobi_hourly_airquality.csv.gz",
+  "data_sha256": "aa49c344a759d51f078fee56c445e58f28a4932c473ca2345812762dc87f3610",
+  "quick_mode": false,
+  "python": "3.12.3",
+  "packages": {
+    "pandas": "3.0.6",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1",
+    "imbalanced-learn": "0.14.2",
+    "xgboost": "3.4.1",
+    "shap": "0.54.1",
+    "statsmodels": "0.15.0"
+  }
+}

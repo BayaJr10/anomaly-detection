@@ -1,0 +1,83 @@
+# =====================================================================
+# Nairobi air-quality anomaly detection: single source of configuration
+# Every script, the API and both notebooks read this file.
+# =====================================================================
+
+random_state: 42
+
+# ---------------------------------------------------------------------
+# 1. Data pipeline (raw sensors.AFRICA archive -> hourly dataset)
+# ---------------------------------------------------------------------
+ingest:
+  # openAFRICA (CKAN) dataset that hosts the monthly sensors.AFRICA archive CSVs for Nairobi.
+  ckan_api: "https://open.africa/api/3/action/package_show"
+  ckan_package_id: "sensorsafrica-airquality-archive-nairobi"
+  start_month: "2019-01"
+  end_month: "2026-06"
+  raw_dir: "data/raw"                       # downloaded monthly CSVs land here
+  # The archive's value_type codes -> dataset column names
+  value_type_map:
+    P0: PM1
+    P2: PM25
+    P1: PM10
+    humidity: HUMIDITY
+    temperature: TEMPERATURE
+  source_timezone: "UTC"                    # archive timestamps are UTC; the hourly file keeps UTC
+  geocode_cache: "data/reference/sensor_locations.csv"
+  geocode_user_agent: "strathmore-dsa8401-airq-capstone"
+  no_coordinates_label: "No coordinates"
+  output_xlsx: "data/processed/NAIROBI_HOURLY_AIRQUALITY_DATASET_merged.xlsx"
+  output_csv: "data/processed/nairobi_hourly_airquality.csv.gz"
+
+# ---------------------------------------------------------------------
+# 2. Modelling
+# ---------------------------------------------------------------------
+data_path: "data/processed/nairobi_hourly_airquality.csv.gz"   # same content as the .xlsx, faster to read
+local_utc_offset_hours: 3                   # Africa/Nairobi (EAT, no DST)
+
+split:
+  train_end: "2024-01-01"                   # train  <  train_end
+  val_end: "2025-01-01"                     # val in [train_end, val_end); test >= val_end
+
+cleaning:
+  temperature_range: [-10, 45]
+  humidity_range: [0, 100]
+  pm_sensor_max: 1000.0                     # SDS011 / PMS5003 upper measuring limit (ug/m3)
+  interpolate_limit: 3
+
+features:
+  rolling_windows: [6, 24, 72]
+
+detectors:
+  mad_threshold: 3.5
+  lof_neighbors: 20
+  lof_contamination: 0.01
+  ocsvm_nu: 0.01
+  ocsvm_components: 200
+  dbscan_eps: 0.8
+  dbscan_min_samples: 10
+  stl_period: 24
+  stl_min_len: 48
+  consensus_votes: 3                        # pseudo-label = 1 when >= this many of 5 detectors agree
+  detector_features: [PM25, PM10, HUMIDITY, TEMPERATURE, HOUR, residual]
+
+meta_model:
+  n_estimators: 500
+  learning_rate: 0.05
+  max_depth: 6
+  cv_folds: 5
+
+severity:                                    # applied to flagged readings only
+  critical_z: 10.0                           # robust z of residual (train median/MAD)
+  alert_z: 6.0
+  critical_pm25: 125.5                       # US EPA (2024) "Very Unhealthy" lower breakpoint
+  alert_pm25: 55.5                           # US EPA (2024) "Unhealthy" lower breakpoint
+
+cause:
+  nbr_support: 0.5
+  min_per_class: 30
+
+paths:
+  models_dir: "models"
+  reports_dir: "reports"
+  events_file: "data/reference/documented_events.csv"

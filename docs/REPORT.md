@@ -5,8 +5,6 @@
 **Baya Isaac** (222327) · MSc Data Science & Analytics · DSA 8401 Applied Machine Learning · Strathmore University
 Lecturers: Prof. Javier Serrano & Emmanuel Bundi
 
-> All numbers in this report come from `reports/metrics.json` (written by `python -m airq.pipeline train`) and from the executed `notebooks/02_anomaly_detection.ipynb`. Section 18 of the notebook asserts that the two produce identical features and probabilities.
-
 ---
 
 ## 1. Problem framing
